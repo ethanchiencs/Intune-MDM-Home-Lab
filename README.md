@@ -22,13 +22,13 @@ This project documents the deployment and configuration of a Microsoft Intune en
 ### 1. Tenant and Licensing
 Signed up for a Microsoft 365 trial tenant and confirmed Intune and Microsoft Entra ID P2 licensing was active under **Billing > Your products**. Created a dedicated test user account and assigned the Intune/EMS license to it under **Users > Active users > Licenses and apps**.
 
-*[Screenshot: Active licenses in Microsoft 365 admin center]*
-*[Screenshot: Test user with license assigned]*
+<img width="1127" height="622" alt="Screenshot 2026-08-31 182314" src="https://github.com/user-attachments/assets/19606dbf-e3d9-409c-8884-0baaf7967cd4" />
+<img width="912" height="852" alt="Screenshot 2026-08-31 175633" src="https://github.com/user-attachments/assets/7560245b-20ee-4673-922f-bf0f53ed5f66" />
 
 ### 2. Building the Test VM
 Created a Generation 2 VM in Hyper-V with virtual TPM and Secure Boot enabled — both required for modern Windows enrollment scenarios. Initially provisioned a Windows Server 2022 Evaluation image by mistake, identified that Server editions don't support the client OOBE work/school account enrollment flow, and corrected course by re-provisioning with a Windows 11 Enterprise Evaluation ISO.
 
-*[Screenshot: Hyper-V VM settings — Generation 2, TPM enabled]*
+<img width="704" height="650" alt="Screenshot 2026-08-30 170709" src="https://github.com/user-attachments/assets/d950f830-147e-4719-9785-b6094268f3b7" />
 
 ### 3. Entra ID Join
 At first boot, signed in using the test user's work account credentials via the "Sign in with a work or school account" option, triggering a Microsoft Entra ID join. Verified the join using:
@@ -39,8 +39,8 @@ dsregcmd /status
 
 confirming `AzureAdJoined: YES`.
 
-*[Screenshot: Work/school account sign-in during OOBE]*
-*[Screenshot: dsregcmd /status output confirming Entra ID join]*
+<img width="936" height="767" alt="Screenshot 2026-08-30 173507" src="https://github.com/user-attachments/assets/d931edfb-0bc6-4cf8-8662-b30b6026965e" />
+<img width="1007" height="396" alt="Screenshot 2026-08-30 185353" src="https://github.com/user-attachments/assets/554c54d0-5b7c-4fee-ad61-c6d99cf56395" />
 
 ### 4. Troubleshooting MDM Auto-Enrollment
 While the Entra ID device join succeeded on the first attempt, automatic MDM enrollment into Intune did not trigger immediately. Troubleshooting steps taken:
@@ -60,8 +60,8 @@ dsregcmd /status
 
 confirming both `AzureAdJoined: YES` and a populated `MdmUrl`, and confirmed the device management connection in **Settings > Accounts > Access work or school**.
 
-*[Screenshot: dsregcmd /status showing AzureAdJoined and MdmUrl]*
-*[Screenshot: Device listed in Intune admin center > Devices > All devices]*
+<img width="931" height="448" alt="Screenshot 2026-08-31 175242" src="https://github.com/user-attachments/assets/8ab03fb0-ba23-4403-9111-1416c6498528" />
+<img width="1689" height="868" alt="Screenshot 2026-08-31 175424" src="https://github.com/user-attachments/assets/4289134e-d17d-4ee6-a107-c470048a5c0c" />
 
 This troubleshooting reflects real-world enrollment issues IT support staff encounter when managing MDM environments — configuration settings across multiple admin consoles (Entra ID, Intune, Microsoft 365 admin center) all need to align for enrollment to succeed, and diagnosing failures requires checking device state, licensing, and tenant-level policy in parallel rather than assuming a single cause.
 
@@ -76,8 +76,8 @@ Assigned the policy to the test user/device and reviewed compliance evaluation r
 
 **Result:** 7 of 8 settings evaluated as **Compliant** — firewall, antivirus, Defender, and all password policy settings passed. **Disk encryption returned a remediation error** (code `2016281112`).
 
-*[Screenshot: Compliance policy configuration]*
-*[Screenshot: Per-setting device compliance status]*
+<img width="845" height="572" alt="Screenshot 2026-08-30 191853" src="https://github.com/user-attachments/assets/22e04da6-2500-4a11-9276-2adbdb49965a" />
+<img width="1027" height="609" alt="Screenshot 2026-08-31 175740" src="https://github.com/user-attachments/assets/4b0a4350-6be6-416e-9e3b-aec13ad06e32" />
 
 This partial result is expected rather than a configuration mistake: enforcing BitLocker inside a Hyper-V VM relies on a virtualized TPM, and BitLocker policy remediation is known to behave inconsistently in nested/virtualized environments compared to physical hardware. The compliance policy itself was configured and evaluated correctly — the error reflects a virtualization limitation, not a policy or enrollment failure.
 
