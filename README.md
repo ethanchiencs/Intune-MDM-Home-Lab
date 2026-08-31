@@ -78,6 +78,7 @@ Assigned the policy to the test user/device and reviewed compliance evaluation r
 
 <img width="845" height="572" alt="Screenshot 2026-08-30 191853" src="https://github.com/user-attachments/assets/22e04da6-2500-4a11-9276-2adbdb49965a" />
 <img width="1027" height="609" alt="Screenshot 2026-08-31 175740" src="https://github.com/user-attachments/assets/4b0a4350-6be6-416e-9e3b-aec13ad06e32" />
+<img width="435" height="251" alt="Screenshot 2026-08-31 185025" src="https://github.com/user-attachments/assets/d1741dc7-15cd-47a4-a71c-ec2ea5b0b562" />
 
 This partial result is expected rather than a configuration mistake: enforcing BitLocker inside a Hyper-V VM relies on a virtualized TPM, and BitLocker policy remediation is known to behave inconsistently in nested/virtualized environments compared to physical hardware. The compliance policy itself was configured and evaluated correctly — the error reflects a virtualization limitation, not a policy or enrollment failure.
 
