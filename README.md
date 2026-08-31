@@ -43,33 +43,49 @@ confirming `AzureAdJoined: YES`.
 *[Screenshot: dsregcmd /status output confirming Entra ID join]*
 
 ### 4. Troubleshooting MDM Auto-Enrollment
-While the Entra ID device join succeeded, automatic MDM enrollment into Intune initially did not trigger. Troubleshooting steps taken:
+While the Entra ID device join succeeded on the first attempt, automatic MDM enrollment into Intune did not trigger immediately. Troubleshooting steps taken:
 
 - Confirmed the MDM user scope setting (**Entra admin center > Mobility (MDM and MAM) > Microsoft Intune**) was set to include the test user, correcting it from its default restrictive state.
 - Verified Entra ID P2 and Intune licensing were correctly assigned to the test user.
-- Attempted manual enrollment via **Settings > Accounts > Access work or school > Enroll only in device management**, using the Intune discovery endpoint (`https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc`) after automatic discovery failed.
+- Attempted manual enrollment via **Settings > Accounts > Access work or school > Enroll only in device management**, using the Intune discovery endpoint (`https://enrollment.manage.microsoft.com/enrollmentserver/discovery.svc`) after automatic discovery initially failed.
 - Investigated and resolved a Windows enrollment error (`801901f4`) tied to stale device objects and MDM scope configuration by clearing duplicate device records from prior enrollment attempts in **Entra admin center > Devices**.
 - Confirmed the "Users may join devices to Microsoft Entra ID" device setting was not restricting the test account.
+- Rebuilt the test VM with the corrected MDM user scope already in place, then re-ran the OOBE work/school account sign-in. This time, MDM enrollment completed successfully alongside the Entra ID join.
 
-This troubleshooting reflects the kind of real-world enrollment issues IT support staff encounter when managing MDM environments — configuration settings across multiple admin consoles (Entra ID, Intune, Microsoft 365 admin center) all need to align for enrollment to succeed, and diagnosing failures requires checking device state, licensing, and tenant-level policy in parallel.
+Verified full enrollment using:
 
-*[Screenshot: MDM user scope setting]*
-*[Screenshot: Enrollment error encountered]*
+```
+dsregcmd /status
+```
+
+confirming both `AzureAdJoined: YES` and a populated `MdmUrl`, and confirmed the device management connection in **Settings > Accounts > Access work or school**.
+
+*[Screenshot: dsregcmd /status showing AzureAdJoined and MdmUrl]*
+*[Screenshot: Device listed in Intune admin center > Devices > All devices]*
+
+This troubleshooting reflects real-world enrollment issues IT support staff encounter when managing MDM environments — configuration settings across multiple admin consoles (Entra ID, Intune, Microsoft 365 admin center) all need to align for enrollment to succeed, and diagnosing failures requires checking device state, licensing, and tenant-level policy in parallel rather than assuming a single cause.
 
 ### 5. Compliance Policy
 Created a Windows compliance policy in the Intune admin center requiring:
+- Firewall enabled
+- Antivirus and Microsoft Defender Antimalware active
+- Password complexity, minimum length, expiration, and reuse restrictions
 - Disk encryption (BitLocker)
-- Minimum password length
 
 Assigned the policy to the test user/device and reviewed compliance evaluation results.
 
+**Result:** 7 of 8 settings evaluated as **Compliant** — firewall, antivirus, Defender, and all password policy settings passed. **Disk encryption returned a remediation error** (code `2016281112`).
+
 *[Screenshot: Compliance policy configuration]*
-*[Screenshot: Device compliance status]*
+*[Screenshot: Per-setting device compliance status]*
+
+This partial result is expected rather than a configuration mistake: enforcing BitLocker inside a Hyper-V VM relies on a virtualized TPM, and BitLocker policy remediation is known to behave inconsistently in nested/virtualized environments compared to physical hardware. The compliance policy itself was configured and evaluated correctly — the error reflects a virtualization limitation, not a policy or enrollment failure.
 
 ## Key Takeaways
 - Microsoft Entra ID join and Intune MDM enrollment are related but distinct processes — a successful device join does not guarantee MDM management is active, and troubleshooting requires checking enrollment scope, licensing, and device state separately.
 - Enrollment issues often span multiple admin consoles (Entra ID, Intune, Microsoft 365 admin center), reinforcing the importance of understanding how Microsoft's cloud identity and device management services interconnect.
 - Diagnostic tools like `dsregcmd /status` and Intune's device compliance views are essential for verifying device state at each stage of the management lifecycle.
+- Not every compliance failure indicates a misconfiguration — understanding *why* a policy setting fails (e.g., virtualized TPM limitations with BitLocker) is as important as getting a policy to evaluate as compliant.
 
 ## Relevance to IT Support Roles
 This lab mirrors day-to-day tasks in help desk and IT support environments: enrolling new devices into management, applying and troubleshooting compliance policies, and diagnosing enrollment failures that end users would otherwise report as "my laptop won't connect to work" tickets.
